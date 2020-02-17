@@ -2,8 +2,8 @@
 
 # Load variables and other settings common to ADAPT runs.
 
-# Find the path to the directory containing this script, relative to the pwd
-COMMON_SCRIPTS_PATH=$( dirname "${BASH_SOURCE[0]}" )
+# Find the absolute path to the directory containing this script
+COMMON_SCRIPTS_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 # Load custom environment and variables
 source $COMMON_SCRIPTS_PATH/custom-env/load_custom_env.sh
@@ -18,8 +18,10 @@ mkdir -p $PREP_MEMOIZE_DIR
 # Set tmp directory
 export TMPDIR="/tmp"
 
-# Set alias for running ADAPT's design.py and include metrics
-alias run-adapt-with-metrics='/usr/bin/time -f "mem=%K RSS=%M elapsed=%e cpu.sys=%S .user=%U" design.py'
+# Set alias for running ADAPT's design.py with metrics
+run-adapt-with-metrics() {
+    /usr/bin/time -f "mem=%K RSS=%M elapsed=%e cpu.sys=%S .user=%U" design.py "$@"
+}
 
 # Set parameters for design
 CLUSTER_THRESHOLD="1.0"
