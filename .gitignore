@@ -1,3 +1,2 @@
-# Ignore large output files
+# Ignore large, not-yet-compressed output files
 *.out
-*.out.gz
