@@ -9,8 +9,8 @@ COMMON_SCRIPTS_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 source $COMMON_SCRIPTS_PATH/custom-env/load_custom_env.sh
 
 # Set and make the output directory
-OUT_TSV_DIR="out/"
-mkdir -p $OUT_TSV_DIR
+OUT_DIR="out/"
+mkdir -p $OUT_DIR
 
 # Make the memoize directory
 mkdir -p $PREP_MEMOIZE_DIR
@@ -18,9 +18,20 @@ mkdir -p $PREP_MEMOIZE_DIR
 # Set tmp directory
 export TMPDIR="/tmp"
 
-# Set alias for running ADAPT's design.py with metrics
-run-adapt-with-metrics() {
-    /usr/bin/time -f "mem=%K RSS=%M elapsed=%e cpu.sys=%S .user=%U" design.py "$@"
+# Set alias for running ADAPT's design.py
+run-adapt() {
+    # Delete existing design.out.gz
+    rm -f $OUT_DIR/design.out.gz
+
+    # Run with metrics
+    /usr/bin/time -f "mem=%K RSS=%M elapsed=%e cpu.sys=%S .user=%U" design.py "$@" &> $OUT_DIR/design.out
+
+    # gzip the stdout/stderr
+    gzip $OUT_DIR/design.out
+
+    # Write a timestamp indicating when the design completed
+    timestamp=$(date +%s)
+    echo "$timestamp" > $OUT_DIR/last-complete-timestamp
 }
 
 # Set parameters for design
