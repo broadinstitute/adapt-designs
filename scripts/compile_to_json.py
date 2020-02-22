@@ -106,11 +106,19 @@ def read_design_listing(in_tsv):
     with open(in_tsv) as f:
         for line in f:
             ls = line.rstrip().split('\t')
-            name, group, display_name, taxon_rank, designs_path, num_options, timestamp_path, description = ls
+            name, group, display_name, taxon_rank, designs_path, num_options, timestamp_path, description, validated_designs = ls
 
             if description.lower() == "none":
                 # Use blank description
                 description = ""
+
+            if validated_designs.lower() == "na":
+                # No old/validated design to show
+                validated_designs = None
+            else:
+                vds = validated_designs.split(':::')
+                assert len(vds) == 2
+                validated_designs = (int(vds[0]), vds[1])
 
             info = {'name': name,
                     'group': group,
@@ -119,7 +127,8 @@ def read_design_listing(in_tsv):
                     'designs_path': designs_path,
                     'num_options': int(num_options),
                     'timestamp_path': timestamp_path,
-                    'description': description}
+                    'description': description,
+                    'validated_designs': validated_designs}
             designs_info += [info]
     return designs_info
 
@@ -155,6 +164,35 @@ def rewrite_primer_rev(seq):
     return rc(seq)
 
 
+def parse_design_targets(design):
+    """Parse design targets for key information to report.
+
+    Args:
+        design: Design object
+
+    Returns:
+        list [x_i] where each x_i is a dict representing a
+        design option
+    """
+    design_targets = []
+    for i, target in enumerate(design.targets):
+        rank = i + 1
+        amplicon_len = target.target_end - target.target_start
+        amplicon_mid_pos = target.target_start + int(amplicon_len/2)
+        guide_seqs = [rewrite_guide(s) for s in target.guide_seqs]
+        primer_fwd_seqs = [rewrite_primer_fwd(s) for s in target.left_primer_seqs]
+        primer_rev_seqs = [rewrite_primer_rev(s) for s in target.right_primer_seqs]
+        target_dict = {
+                'rank': rank,
+                'ampliconMidPos': amplicon_mid_pos,
+                'spacerSeqs': guide_seqs,
+                'primerFwdSeqs': primer_fwd_seqs,
+                'primerRevSeqs': primer_rev_seqs
+        }
+        design_targets += [target_dict]
+    return design_targets
+
+
 def make_json_dict_for_design(design, design_info):
     """Create dict to use for JSON string for a design.
 
@@ -179,32 +217,29 @@ def make_json_dict_for_design(design, design_info):
     timestampHuman = datetime.utcfromtimestamp(timestamp).strftime('%b %d, %Y')
 
     # Collect key design information
-    design_targets = []
-    for i, target in enumerate(design.targets):
-        rank = i + 1
-        amplicon_len = target.target_end - target.target_start
-        amplicon_mid_pos = target.target_start + int(amplicon_len/2)
-        guide_seqs = [rewrite_guide(s) for s in target.guide_seqs]
-        primer_fwd_seqs = [rewrite_primer_fwd(s) for s in target.left_primer_seqs]
-        primer_rev_seqs = [rewrite_primer_rev(s) for s in target.right_primer_seqs]
-        target_dict = {
-                'rank': rank,
-                'ampliconMidPos': amplicon_mid_pos,
-                'spacerSeqs': guide_seqs,
-                'primerFwdSeqs': primer_fwd_seqs,
-                'primerRevSeqs': primer_rev_seqs
-        }
-        design_targets += [target_dict]
+    design_targets = parse_design_targets(design)
 
     # Only report the first design_info['num_options'] targets
     design_targets = design_targets[:design_info['num_options']]
 
-    return {'id': design_id, 'group': design_info['group'],
+    json_dict = {'id': design_id, 'group': design_info['group'],
             'displayName': design_info['display_name'],
             'description': design_info['description'],
             'taxonRank': design_info['taxon_rank'],
             'lastUpdatedTimestamp': timestamp, 'lastUpdatedStr': timestampHuman,
             'designOptions': design_targets}
+
+    if design_info['validated_designs'] is not None:
+        # Read an old/validated design to use here
+        vd_timestamp, vd_path = design_info['validated_designs']
+        vd_timestampHuman = datetime.utcfromtimestamp(vd_timestamp).strftime('%b %d, %Y')
+        vd_design = Design.from_file(vd_path)
+        vd_design_targets = parse_design_targets(vd_design)
+        json_dict['validated'] = {'lastUpdatedTimestamp': vd_timestamp,
+                'lastUpdatedStr': vd_timestampHuman,
+                'designOptions': vd_design_targets}
+
+    return json_dict
 
 
 def compile_json(args):
@@ -262,7 +297,9 @@ def main():
               "(5) path to TSV file giving design options; (6) number of "
               "design options to report; (7) path to "
               "file giving timestamp of last update; (8) description of "
-              "the design"))
+              "the design ('none' if no description); (9) old, validated "
+              "design options in the format 'timestamp:::path-to-TSV' "
+              "(or 'na' if none to show)"))
     parser.add_argument('out_json',
         help=("Path to file at which to write JSON"))
 
