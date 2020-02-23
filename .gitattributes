@@ -3,3 +3,4 @@
 *.acc.txt filter=lfs diff=lfs merge=lfs -text
 *.input-sequences.txt filter=lfs diff=lfs merge=lfs -text
 design.out.gz filter=lfs diff=lfs merge=lfs -text
+design.*.out.gz filter=lfs diff=lfs merge=lfs -text
