@@ -7,7 +7,7 @@
 # loading for ADAPT
 source ../../../scripts/run-adapt/custom-env/load_custom_env.sh
 
-GISAID_DL_DATE="20200218"
+GISAID_DL_DATE="20200223"
 
 # Delete fastas-for-design/ files already made
 rm -f fastas-for-design/*
