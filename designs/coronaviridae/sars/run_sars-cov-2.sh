@@ -20,6 +20,7 @@ ARG_BESTNTARGETS="200"
 
 # Design only for SARS-CoV-2, using custom parameters
 ONLY_DESIGN_FOR="in/only-design.sars-cov-2.tsv"
+ARG_GM="0"
 ARG_ACTIVITYTHRES="-0.90" # -0.85 works too, but fewer designs
 ARG_IDM="4"
 ARG_IDFRAC="0"
