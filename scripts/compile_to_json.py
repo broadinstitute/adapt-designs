@@ -92,6 +92,86 @@ class Design:
         return Design(targets)
 
 
+class DesignTestSequences:
+    """Store information on recommended test sequences (targets) for multiple
+    design options."""
+
+    def __init__(self, targets):
+        self.targets = targets
+
+    def get_test_seqs(self, endpoints):
+        """Find recommended test sequences (targets).
+
+        Args:
+            endpoints: tuple (start, end) corresponding to a target (amplicon)
+
+        Returns:
+            list l such that each l[i] is a dict {'target_seq': target
+            sequence as string, 'target_seq_html': target sequence with
+            HTML tags indicating primers and guides}
+        """
+        if endpoints not in self.targets:
+            raise ValueError(("Unknown endpoints for a target"))
+
+        test_seqs = []
+        for target_str, target_str_tagged in self.targets[endpoints]:
+            # Replace tags with HTML span
+            target_html = str(target_str_tagged)    # copy string
+            target_html = target_html.replace('<primer>',
+                    "<span class='primer'>")
+            target_html = target_html.replace('<guide>',
+                    "<span class='guide'>")
+            target_html = target_html.replace('</primer>',
+                    "</span>")
+            target_html = target_html.replace('</guide>',
+                    "</span>")
+            test_seqs += [{'target_seq': target_str, 'target_seq_html':
+                target_html}]
+
+        return test_seqs
+
+    @staticmethod
+    def from_file(fn):
+        """Read a collection of test target sequences from a file.
+
+        Args:
+            fn: path to a TSV file giving test targets
+
+        Returns:
+            DesignTestSequences object
+        """
+        if not os.path.isfile(fn):
+            return None
+
+        targets = defaultdict(list)
+        with open(fn) as f:
+            col_names = {}
+            rows = []
+            for i, line in enumerate(f):
+                line = line.rstrip()
+                ls = line.split('\t')
+                if i == 0:
+                    # Parse header
+                    for j in range(len(ls)):
+                        col_names[j] = ls[j]
+                else:
+                    # Read each column as a variable
+                    cols = {}
+                    for j in range(len(ls)):
+                        cols[col_names[j]] = ls[j]
+                    rows += [(cols['design-target-start'],
+                            cols['design-target-end'],
+                            cols['test-target-seq'],
+                            cols['test-target-seq-tagged'])]
+
+            for row in rows:
+                start, end, seq, seq_tagged = row
+                endpoints = (int(start), int(end))
+                targets[endpoints].append((seq, seq_tagged))
+
+        return DesignTestSequences(targets)
+
+
 def read_design_listing(in_tsv):
     """Read TSV listing designs to compile.
 
@@ -106,7 +186,7 @@ def read_design_listing(in_tsv):
     with open(in_tsv) as f:
         for line in f:
             ls = line.rstrip().split('\t')
-            name, group, display_name, taxon_rank, designs_path, num_options, timestamp_path, description, validated_designs = ls
+            name, group, display_name, taxon_rank, designs_path, num_options, timestamp_path, test_targets_path, description, validated_designs = ls
 
             if description.lower() == "none":
                 # Use blank description
@@ -117,8 +197,8 @@ def read_design_listing(in_tsv):
                 validated_designs = None
             else:
                 vds = validated_designs.split(':::')
-                assert len(vds) == 2
-                validated_designs = (int(vds[0]), vds[1])
+                assert len(vds) == 3
+                validated_designs = (int(vds[0]), vds[1], vds[2])
 
             info = {'name': name,
                     'group': group,
@@ -127,6 +207,7 @@ def read_design_listing(in_tsv):
                     'designs_path': designs_path,
                     'num_options': int(num_options),
                     'timestamp_path': timestamp_path,
+                    'test_targets_path': test_targets_path,
                     'description': description,
                     'validated_designs': validated_designs}
             designs_info += [info]
@@ -164,11 +245,13 @@ def rewrite_primer_rev(seq):
     return rc(seq)
 
 
-def parse_design_targets(design):
+def parse_design_targets(design, test_sequences=None):
     """Parse design targets for key information to report.
 
     Args:
         design: Design object
+        test_sequences: if set, DesignTestSequences object giving
+            recommended test sequences for each design
 
     Returns:
         list [x_i] where each x_i is a dict representing a
@@ -189,6 +272,9 @@ def parse_design_targets(design):
                 'primerFwdSeqs': primer_fwd_seqs,
                 'primerRevSeqs': primer_rev_seqs
         }
+        if test_sequences is not None:
+            endpoints = (target.target_start, target.target_end)
+            target_dict['testTargets'] = test_sequences.get_test_seqs(endpoints)
         design_targets += [target_dict]
     return design_targets
 
@@ -216,8 +302,11 @@ def make_json_dict_for_design(design, design_info):
             timestamp = int(line)
     timestampHuman = datetime.utcfromtimestamp(timestamp).strftime('%b %d, %Y')
 
+    # Read test targets
+    test_sequences = DesignTestSequences.from_file(design_info['test_targets_path'])
+
     # Collect key design information
-    design_targets = parse_design_targets(design)
+    design_targets = parse_design_targets(design, test_sequences)
 
     # Only report the first design_info['num_options'] targets
     design_targets = design_targets[:design_info['num_options']]
@@ -231,10 +320,11 @@ def make_json_dict_for_design(design, design_info):
 
     if design_info['validated_designs'] is not None:
         # Read an old/validated design to use here
-        vd_timestamp, vd_path = design_info['validated_designs']
+        vd_timestamp, vd_designs_path, vd_test_targets_path = design_info['validated_designs']
         vd_timestampHuman = datetime.utcfromtimestamp(vd_timestamp).strftime('%b %d, %Y')
-        vd_design = Design.from_file(vd_path)
-        vd_design_targets = parse_design_targets(vd_design)
+        vd_test_sequences = DesignTestSequences.from_file(vd_test_targets_path)
+        vd_design = Design.from_file(vd_designs_path)
+        vd_design_targets = parse_design_targets(vd_design, vd_test_sequences)
         json_dict['validated'] = {'lastUpdatedTimestamp': vd_timestamp,
                 'lastUpdatedStr': vd_timestampHuman,
                 'designOptions': vd_design_targets}
@@ -296,10 +386,11 @@ def main():
               "(4) taxonomy rank (e.g., 'species'); "
               "(5) path to TSV file giving design options; (6) number of "
               "design options to report; (7) path to "
-              "file giving timestamp of last update; (8) description of "
-              "the design ('none' if no description); (9) old, validated "
-              "design options in the format 'timestamp:::path-to-TSV' "
-              "(or 'na' if none to show)"))
+              "file giving timestamp of last update; (8) path to TSV "
+              "file giving test targets; (9) description of "
+              "the design ('none' if no description); (10) old, validated "
+              "design options in the format 'timestamp:::path-to-TSV-with-designs:::"
+              "path-to-TSV-with-test-targets' (or 'na' if none to show)"))
     parser.add_argument('out_json',
         help=("Path to file at which to write JSON"))
 
