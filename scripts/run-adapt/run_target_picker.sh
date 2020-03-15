@@ -10,8 +10,8 @@ source $COMMON_SCRIPTS_PATH/custom-env/load_custom_env.sh
 
 
 # Set parameters for picking targets
-ARG_PM="5"
-ARG_GM="5"
+ARG_PM="3"
+ARG_GM="2"
 ARG_MIN_TARGET_LEN="500"
 ARG_MIN_FRAC_TO_COVER_WITH_REP_SEQS="0.95"
 
