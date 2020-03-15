@@ -1,2 +1,5 @@
 # Ignore large, not-yet-compressed output files
 *.out
+
+# Temporary vim files
+*.swp
