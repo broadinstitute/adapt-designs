@@ -125,7 +125,7 @@ class DesignTestSequences:
                     "</span>")
             target_html = target_html.replace('</guide>',
                     "</span>")
-            test_seqs += [{'target_seq': target_str, 'target_seq_html':
+            test_seqs += [{'targetSeq': target_str, 'targetSeqHtml':
                 target_html}]
 
         return test_seqs
