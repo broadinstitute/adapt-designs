@@ -45,4 +45,6 @@ avian_coronavirus	694014	None	NC_001451,NC_010800
 beluga_whale_coronavirus_sw1	694015	None	NC_010646
 sars-cov-1	999999991	None	NC_004718
 sars-cov-2	999999992	None	NC_004718
+sars-cov-1-related	999999994	None	NC_004718
+sars-cov-2-related	999999995	None	NC_004718
 sars-like	999999993	None	NC_004718
