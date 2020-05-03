@@ -20,18 +20,23 @@ export TMPDIR="/tmp"
 
 # Set alias for running ADAPT's design.py
 run-adapt() {
-    # Delete existing design.out.gz
-    rm -f $OUT_DIR/design.out.gz
+    # Arg 1 ($1) should give a name of a file to which to write stdout/err (no extension)
+    # The other arguments that follow (accessible with `"${@:2}"`) should be arguments to ADAPT
+
+    fn="$1"
+
+    # Delete existing output file
+    rm -f $OUT_DIR/${fn}.out.gz
 
     # Run with metrics
-    /usr/bin/time -f "mem=%K RSS=%M elapsed=%e cpu.sys=%S .user=%U" design.py "$@" &> $OUT_DIR/design.out
+    /usr/bin/time -f "mem=%K RSS=%M elapsed=%e cpu.sys=%S .user=%U" design.py "${@:2}" &> $OUT_DIR/${fn}.out
 
     # gzip the stdout/stderr
-    gzip $OUT_DIR/design.out
+    gzip $OUT_DIR/${fn}.out
 
     # Write a timestamp indicating when the design completed
     timestamp=$(date +%s)
-    echo "$timestamp" > $OUT_DIR/last-complete-timestamp
+    echo "$timestamp" > $OUT_DIR/${fn}.last-complete-timestamp
 }
 
 # Set default parameters for design
