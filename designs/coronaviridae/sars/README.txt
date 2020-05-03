@@ -16,4 +16,10 @@ This creates designs for the following taxa:
       at https://nextstrain.org/groups/blab/sars-like-cov
   - SARS-CoV-1 (usually called SARS-CoV (i.e., the 2003 outbreak causing SARS
     disease), but hopefully soon to be renamed SARS-CoV-1)
+  - SARS-CoV-2-related and SARS-CoV-1-related, as defined in Fig. 1b
+    of https://doi.org/10.1038/s41586-020-2169-0
+  - SARS-CoV-2-relaxed, which is specific against all coronavirus
+    species and a FASTA containing all sequences in the SARS-related species
+    except for SARS-CoV-2 and 2 sequences very closely related to SARS-CoV-2
+    (RaTG13 and a pangolin sequence)
 
