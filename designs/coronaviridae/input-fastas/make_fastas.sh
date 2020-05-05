@@ -28,10 +28,18 @@ python ../../../scripts/download_fasta_for_accessions.py in/NCBI_SARS-like.other
 # Make the SARS-CoV-2 FASTA; this is directly from GISAID
 cp in/GISAID_SARS-CoV-2.${GISAID_DL_DATE}.fasta fastas-for-design/SARS-CoV-2.fasta
 
+# Make a SARS-CoV-2 FASTA with 500 sampled sequences; this is helpful when we're
+# combining SARS-CoV-2 with other taxa, and want to design for the combination
+python ../../../scripts/subsample_fasta.py -i in/GISAID_SARS-CoV-2.${GISAID_DL_DATE}.fasta -n 300 -o fastas-for-design/SARS-CoV-2.subsampled-300.fasta
+python ../../../scripts/subsample_fasta.py -i in/GISAID_SARS-CoV-2.${GISAID_DL_DATE}.fasta -n 10 -o fastas-for-design/SARS-CoV-2.subsampled-10.fasta
+
 # Make the SARS-CoV-2-related FASTA, combining GISAID and NCBI
 # This includes SARS-CoV-2 and SARS-like sequences that are closely related
 # All SARS-like from GISAID is SARS-CoV-2-related
 cat /tmp/NCBI_SARS-like.SARS-CoV-2_related.fasta in/GISAID_SARS-like.${GISAID_DL_DATE}.fasta in/GISAID_SARS-CoV-2.${GISAID_DL_DATE}.fasta > fastas-for-design/SARS-CoV-2-related.fasta
+
+# Do the same as above but with subsampled sequences for SARS-CoV-2
+cat /tmp/NCBI_SARS-like.SARS-CoV-2_related.fasta in/GISAID_SARS-like.${GISAID_DL_DATE}.fasta fastas-for-design/SARS-CoV-2.subsampled-10.fasta > fastas-for-design/SARS-CoV-2-related.2-subsampled.fasta
 
 # Make a FASTA that is like SARS-CoV-2-related, except without SARS-CoV-2 and a few sequences highly similar to SARS-CoV-2
 cat /tmp/NCBI_SARS-like.SARS-CoV-2_related_trimmed.fasta in/GISAID_SARS-like_trimmed.${GISAID_DL_DATE}.fasta > /tmp/SARS-CoV-2-related_without_SARS-CoV-2_and_surrounding.fasta
@@ -52,6 +60,9 @@ cat fastas-for-design/SARS-CoV-1.fasta /tmp/NCBI_SARS-like.SARS-CoV-1_related.fa
 # Make a complete SARS FASTA combining the disjoint groupings above
 cat fastas-for-design/SARS-CoV-1.fasta fastas-for-design/SARS-like.fasta fastas-for-design/SARS-CoV-2.fasta > fastas-for-design/SARS-all.fasta
 
+# Do the same as above but with subsampled sequences for SARS-CoV-2
+cat fastas-for-design/SARS-CoV-1.fasta fastas-for-design/SARS-like.fasta fastas-for-design/SARS-CoV-2.subsampled-300.fasta > fastas-for-design/SARS-all.2-subsampled.fasta
+
 # gzip files
 gzip fastas-for-design/SARS-CoV-2.fasta
 gzip fastas-for-design/SARS-CoV-2-related.fasta
@@ -60,6 +71,10 @@ gzip fastas-for-design/SARS-CoV-1-related.fasta
 gzip fastas-for-design/SARS-like.fasta
 gzip fastas-for-design/SARS-all.fasta
 gzip fastas-for-design/SARS-CoV-2_loose-surrounding.fasta
+gzip fastas-for-design/SARS-CoV-2.subsampled-300.fasta
+gzip fastas-for-design/SARS-CoV-2.subsampled-10.fasta
+gzip fastas-for-design/SARS-CoV-2-related.2-subsampled.fasta
+gzip fastas-for-design/SARS-all.2-subsampled.fasta
 
 # Remove tmp files
 rm /tmp/NCBI_SARS-CoV-1.fasta
