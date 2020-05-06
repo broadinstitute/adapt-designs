@@ -16,7 +16,7 @@ USE_FASTA="in/use-fasta.tsv"
 SPECIFICITY_IGNORE="in/specificity-ignore.tsv"
 
 # For all of these designs, increase the number of output designs
-ARG_BESTNTARGETS="200"
+ARG_BESTNTARGETS="50"
 
 # Design only for SARS-CoV-2-related, using custom parameters
 # Thresholds on GP and PP need to be increased because the vast

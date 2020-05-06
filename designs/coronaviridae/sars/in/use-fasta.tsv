@@ -1,6 +1,6 @@
-694009	None	../input-fastas/fastas-for-design/SARS-all.fasta.gz
+694009	None	../input-fastas/fastas-for-design/SARS-all.2-subsampled.fasta.gz
 999999991	None	../input-fastas/fastas-for-design/SARS-CoV-1.fasta.gz
 999999992	None	../input-fastas/fastas-for-design/SARS-CoV-2.fasta.gz
 999999993	None	../input-fastas/fastas-for-design/SARS-like.fasta.gz
 999999994	None	../input-fastas/fastas-for-design/SARS-CoV-1-related.fasta.gz
-999999995	None	../input-fastas/fastas-for-design/SARS-CoV-2-related.fasta.gz
+999999995	None	../input-fastas/fastas-for-design/SARS-CoV-2-related.2-subsampled.fasta.gz
