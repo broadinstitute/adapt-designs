@@ -16,13 +16,13 @@ class DesignTarget:
     """
 
     def __init__(self, target_start, target_end, guide_seqs,
-            left_primer_seqs, right_primer_seqs, cost):
+            left_primer_seqs, right_primer_seqs, objective_value):
         self.target_start = target_start
         self.target_end = target_end
         self.guide_seqs = tuple(sorted(guide_seqs))
         self.left_primer_seqs = tuple(sorted(left_primer_seqs))
         self.right_primer_seqs = tuple(sorted(right_primer_seqs))
-        self.cost = cost
+        self.objective_value = objective_value
 
 
 class Design:
@@ -48,6 +48,7 @@ class Design:
             return None
 
         rows = []
+        obj_col = None
         with open(fn) as f:
             col_names = {}
             for i, line in enumerate(f):
@@ -57,19 +58,21 @@ class Design:
                     # Parse header
                     for j in range(len(ls)):
                         col_names[j] = ls[j]
+                    if 'objective-value' in col_names.values():
+                        obj_col = 'objective-value'
+                    else:
+                        assert 'cost' in col_names.values()
+                        obj_col = 'cost'
                 else:
                     # Read each column as a variable
                     cols = {}
                     for j in range(len(ls)):
                         cols[col_names[j]] = ls[j]
-                    rows += [(float(cols['cost']), int(cols['target-start']),
+                    rows += [(float(cols[obj_col]), int(cols['target-start']),
                              int(cols['target-end']), cols)]
 
-        # Sort rows by cost (first in the tuple); in case of ties, sort
-        # by target start and target end positions (second and third in
-        # the tuple)
+        # Assume rows are already sorted with best on top
         # Pull out the best N targets
-        rows = sorted(rows)
         if num_targets != None:
             if len(rows) < num_targets:
                 raise Exception(("The number of rows in a design (%d) is fewer "
@@ -86,7 +89,7 @@ class Design:
                 cols['guide-target-sequences'].split(' '),
                 cols['left-primer-target-sequences'].split(' '),
                 cols['right-primer-target-sequences'].split(' '),
-                float(cols['cost'])
+                float(cols[obj_col])
             )]
 
         return Design(targets)
@@ -111,7 +114,11 @@ class DesignTestSequences:
             HTML tags indicating primers and guides}
         """
         if endpoints not in self.targets:
-            raise ValueError(("Unknown endpoints for a target"))
+            # There seem to be no targets; it is possible, e.g., that too many
+            # had ambiguity in this region
+            print(("WARNING: Design with endpoints {} does not have test "
+                "targets; skipping").format(endpoints))
+            return []
 
         test_seqs = []
         for target_str, target_str_tagged in self.targets[endpoints]:
