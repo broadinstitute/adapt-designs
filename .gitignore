@@ -1,5 +1,8 @@
 # Ignore large, not-yet-compressed output files
 *.out
 
+# Ignore files that are too large
+/designs/coronaviridae/species/out/species.out.gz
+
 # Temporary vim files
 *.swp
