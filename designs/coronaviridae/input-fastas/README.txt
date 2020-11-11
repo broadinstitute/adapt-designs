@@ -9,3 +9,7 @@ relaxed SARS-CoV-2 design that is not as constrained in specificity.
 
 The script make_fastas.sh groups these to create different FASTA files
 for different taxonomic groupings, placed in fastas-for-design/
+
+Note that all fastas with GISAID data are ignored from this repository
+so we do not distribute them (per GISAID policy). The directory
+fastas-for-design/ is also ignored.

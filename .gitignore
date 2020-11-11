@@ -6,3 +6,10 @@
 
 # Temporary vim files
 *.swp
+
+# Ignore files that contain GISAID sequences so we do
+# not distribute them (per GISAID policy)
+/designs/coronaviridae/input-fastas/fastas-for-design
+/designs/coronaviridae/input-fastas/in/GISAID_*
+/designs/coronaviridae/sars/out/*.fasta
+/designs/coronaviridae/species/out/*.fasta
