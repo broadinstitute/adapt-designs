@@ -13,3 +13,6 @@
 /designs/coronaviridae/input-fastas/in/GISAID_*
 /designs/coronaviridae/sars/out/*.fasta
 /designs/coronaviridae/species/out/*.fasta
+
+# Custom environment
+custom-env/
