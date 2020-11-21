@@ -9,6 +9,7 @@ This repository contains several designs we produced with ADAPT, including ones 
 
 The designs are in `designs/`, organized by viral family.
 In particular, ADAPT's output are `.tsv` files in the `out/` directories.
+`experimentally-tested/` contains a summary compiling the designs tested experimentally, including the target sequences used.
 
 `scripts/run-adapt/` contains scripts for running ADAPT.
 They require setting up a `scripts/run-adapt/custom-env/load_custom_env.sh` script to load an environment with ADAPT and to set the environment variables used by `run_common.sh`.
